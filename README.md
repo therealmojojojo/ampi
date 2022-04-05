@@ -145,5 +145,7 @@ RST Pin mapping must be changed in /RaspberryPi_JetsonNano/python/lib/waveshare_
     - [Alt 2](https://www.raspberrypi-spy.co.uk/2012/06/simple-guide-to-the-rpi-gpio-header-and-pins/) 
   - [HiFiberry Amp2](https://www.hifiberry.com/docs/hardware/gpio-usage-of-hifiberry-boards/)
   - [P532 NFC Reader](https://blog.stigok.com/2017/10/12/setting-up-a-pn532-nfc-module-on-a-raspberry-pi-using-i2c.html)
+  - [P532 NFC Reader](https://ozeki.hu/p_3023-how-to-setup-a-nfc-reader-on-raspberry-pi.html)
+  - [P532 NFC Reader](https://github.com/gassajor000/pn532pi)
   - [2.9'' e-Paper module v1]()
 
