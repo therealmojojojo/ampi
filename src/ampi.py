@@ -2,6 +2,8 @@ import signal
 import sys
 import time
 import RPi.GPIO as GPIO
+import components
+from components import nfc_reader
 
 #volume
 #screen
@@ -13,7 +15,9 @@ class AmpiController:
     component_registry = [];
     turn_on_off_state = 0;
 
-    def setup():
+    def start():
+        nfc_reader.setup()
+
         print("Running setup");
     
     def turn_on_off(self):
@@ -24,8 +28,8 @@ class AmpiController:
             self.turn_on_off_state = 1;
             print ("Turning on...");
             
-    def play(self):
-        print("Start playing");
+    def play(self, nfc_string):
+        print("Start playing" + nfc_string);
 
     def volume_change(self):
         print("Volume changing");
@@ -48,11 +52,11 @@ class AmpiController:
 
 
 if __name__ == '__main__':
-    GPIO.setmode(GPIO.BCM)
-
+    
     ampi = AmpiController();
-    ampi.setup();
-    ampi.turn_on_off();
+    ampi.start();
+    while True:
+        nfc_reader.loop()
 
 
 
