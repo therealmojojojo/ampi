@@ -1,26 +1,28 @@
-"""
-    This example will attempt to connect to an ISO14443A
-    card or tag and retrieve some basic information about it
-    that can be used to determine what type of card it is.   
-   
-    To enable debug message, set DEBUG in nfc/PN532_log.h
-"""
 import time
 import binascii
 
 from pn532pi import Pn532, pn532
 from pn532pi import Pn532I2c
 
-
-
 PN532_I2C = Pn532I2c(1)
 nfc = Pn532(PN532_I2C)
+ampi_controller = None
 
-
-def setup():
+def setup(ampi):
     nfc.begin()
+    ampi_controller = ampi
 
-    versiondata = nfc.getFirmwareVersion()
+    # initialising the NFC card
+    i = 0
+    while i < 3:
+        try: 
+            versiondata = nfc.getFirmwareVersion()
+            break
+        except OSError as e:
+            # Reading doesn't always work! Just print error and we'll try again
+            print("Reading from DHT failure: ", e.args)
+            time.sleep(1)
+            i = i + 1
     if not versiondata:
         print("Didn't find PN53x board")
         raise RuntimeError("Didn't find PN53x board")  # halt
@@ -38,7 +40,6 @@ def setup():
 
     print("Waiting for an ISO14443A card")
 
-
 def loop():
     # Wait for an ISO14443A type cards (Mifare, etc.).  When one is found
     # 'uid' will be populated with the UID, and uidLength will indicate
@@ -51,6 +52,7 @@ def loop():
         print("UID Value: {}".format(binascii.hexlify(uid)))
         # Wait 1 second before continuing
         time.sleep(1)
+        ampi_controller.play(binascii.hexlify(uid))
         return True
     else:
         # pn532 probably timed out waiting for a card
