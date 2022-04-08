@@ -13,9 +13,6 @@ def get_spotify_client():
     player.clear()
     return player
 
-def test_connection(get_spotify_client):
-    player = get_spotify_client
-
 
 def test_play(get_spotify_client):
     print("----- test_play -------")

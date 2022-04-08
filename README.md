@@ -45,7 +45,7 @@ Installed [mopidy-spotify](https://pypi.org/project/Mopidy-Spotify/)
 Used [jsonrpclib](https://github.com/joshmarshall/jsonrpclib) 
 Major issues: 
 - errors [ModuleNotFoundError: No module named 'gi'](https://stackoverflow.com/questions/71369726/no-module-named-gi). Module gi does not seem to exist on python 3.10 -> must use python 3.9
-- jsonrpclib sends text/xml and application-jsonrpc ContentType by default [open bug](https://github.com/joshmarshall/jsonrpclib/issues/56). Mopidy [expects](https://docs.mopidy.com/en/latest/api/http/) and rejects the request. Solution - [disable csfr_protection](https://github.com/mopidy/mopidy/pull/1714) in mopidy.conf
+- jsonrpclib sends text/xml and application-jsonrpc ContentType by default -> see [open bug](https://github.com/joshmarshall/jsonrpclib/issues/56). Mopidy [expects](https://docs.mopidy.com/en/latest/api/http/) application/json and rejects the request. Solution - [disable csfr_protection](https://github.com/mopidy/mopidy/pull/1714) in mopidy.conf
 ## BOM
 
 |Component| Price|

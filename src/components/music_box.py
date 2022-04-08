@@ -11,10 +11,8 @@ load_dotenv(dotenv_path)
 print(os.environ.get("PYTHONPATH"))
 print(os.environ.get("mopidy_server"))
 
-
 import requests
 from mopidy import core
-
 
 import jsonrpclib
 
@@ -69,33 +67,27 @@ class RoonClient(MusicBox):
     pass
 #https://github.com/flandrefinish/mopidycli/blob/master/mopidycli/cli.py
 class MopidySpotifyClient(MusicBox):
-    def __init__(self):
-        self.current_playlist = None
-        self.server = None
-
-    def connect_to_provider(self):
-        print("connecting to provider")
+    def __init__(self, playlist):
+        self.current_playlist = playlist
         self.server = jsonrpclib.Server(os.environ.get("mopidy_server") + "/mopidy/rpc")
         print(self.server)
 
     def get_current_state(self):
         state = self.server.core.playback.get_state()
-        
         return state
-    def play_new(self, playlist: str):  
-        self.current_playlist = playlist
-        hits = self.server.core.library.browse(playlist)
+
+    def play_new(self):  
+        hits = self.server.core.library.browse(self.current_playlist)
         # browse(): Returns a list of mopidy.models.Ref objects for the directories and tracks at the given uri.
         print('Got hits from browse(): %r', hits)
         if len(hits) == 0:
-            print("Nothing found for playlist", playlist)
+            print("Nothing found for playlist", self.current_playlist)
             return 0
-
         self.server.core.tracklist.clear()
         self.server.core.tracklist.add(uris=[t['uri'] for t in hits])
         self.server.core.playback.play()
+
     def get_current_track(self):
-        
         return self.server.core.playback.get_current_track()
 
     def next(self):
@@ -119,17 +111,19 @@ class MopidySpotifyClient(MusicBox):
     def clear(self):
         self.server.core.tracklist.clear()
 
+#factory
 def get_client(playlist: str):
+    print("Get Client for " + playlist)
     clients = {
         "Spotify": MopidySpotifyClient,
         "Roon": RoonClient
     }
     if playlist is None or playlist == '':
-        name = "Roon" 
+        return None 
     else:
         name = "Spotify" if playlist.find("spotify") >= 0 else "Roon"
     print (clients[name])
-    return clients[name]()
+    return clients[name](playlist)
 
 
 if __name__ == "__main__":
