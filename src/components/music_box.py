@@ -1,5 +1,6 @@
 import os
 import time
+import json
 from os.path import join, dirname
 from dotenv import load_dotenv, find_dotenv
 
@@ -40,6 +41,12 @@ class MusicBox:
         pass
 
     def back(self):
+        pass
+
+    def play(self):
+        pass
+
+    def clear(self):
         pass
 
     def get_current_state(self):
@@ -88,6 +95,7 @@ class MopidySpotifyClient(MusicBox):
         self.server.core.tracklist.add(uris=[t['uri'] for t in hits])
         self.server.core.playback.play()
     def get_current_track(self):
+        
         return self.server.core.playback.get_current_track()
 
     def next(self):
@@ -101,6 +109,15 @@ class MopidySpotifyClient(MusicBox):
 
     def resume(self):
         self.server.core.playback.resume()
+
+    def play(self):
+        self.server.core.playback.play()
+
+    def stop(self):
+        self.server.core.playback.stop()
+    
+    def clear(self):
+        self.server.core.tracklist.clear()
 
 def get_client(playlist: str):
     clients = {
@@ -141,4 +158,4 @@ if __name__ == "__main__":
     state = player.get_current_state()
     print("current state: ", state)
     track = player.get_current_track()
-    print("current track: ", track)
+    print("current track: ", track)                                        
