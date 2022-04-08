@@ -17,11 +17,35 @@ Main use cases:
    - when amp is powered off, displays the time and outside temperature
 
 
+## Making it work
+
+### NFC card reader
+
+Use case: I'm able to read the UID from a NFC card and pass it to AmpiController. 
+Unable to make it work using [P532 NFC Reader](https://github.com/gassajor000/pn532pi) python library. The behaviour I've noticed is the following: 
+- nfc-poll works reliably by itself
+- pn532 library works randomnly and after a while starts failing with OSError when reading or writing. . I've used the examples included in the package - i suspect there are some fd that are not closed or something that break the communication with the card. 
+- After that OSError nfc-poll stops working
+- after restart, nfc-poll starts working reliably
+In the end, I wrote a simple python subrocess function that calls nfc-poll directly and does the job. 
+
+### HiFiBerry AMP2
+
+Followed the instructions [here](http://www.waailap.nl/instruction/215/setup-hifiberry-amp2.html) . Worked perfectly. 
+
+### Music providers
+#### Roon client
+Installed [Roon Bridge](https://help.roonlabs.com/portal/en/kb/articles/linux-install#Overview)
+Installed [pyroon](https://github.com/pavoni/pyroon)
+Works perfectly. 
+
+#### Spotify
+
 ## BOM
 
 |Component| Price|
 |---|---|
-|Raspberry Pi 3 B+| 50|
+|Raspberry Pi 4 B (+ fried Raspberry Pi 3B+)| 120+50|
 |Hifiberry AMP2 | 60|
 |2.9 inch e-Paper module V1 - waveshare | 15|
 |NFC reader - P532 elechouse V3 | 15|
