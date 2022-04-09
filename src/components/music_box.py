@@ -22,7 +22,7 @@ class MusicBox:
         self.current_playlist = None
         self.server = None
 
-    def play_new(self, playlist: str):
+    def load_new_playlist(self):
         
         pass
 
@@ -76,7 +76,7 @@ class MopidySpotifyClient(MusicBox):
         state = self.server.core.playback.get_state()
         return state
 
-    def play_new(self):  
+    def load_new_playlist(self, playlist):  
         hits = self.server.core.library.browse(self.current_playlist)
         # browse(): Returns a list of mopidy.models.Ref objects for the directories and tracks at the given uri.
         print('Got hits from browse(): %r', hits)
@@ -85,7 +85,6 @@ class MopidySpotifyClient(MusicBox):
             return 0
         self.server.core.tracklist.clear()
         self.server.core.tracklist.add(uris=[t['uri'] for t in hits])
-        self.server.core.playback.play()
 
     def get_current_track(self):
         return self.server.core.playback.get_current_track()
@@ -133,7 +132,8 @@ if __name__ == "__main__":
     state = player.get_current_state()
     print("current state: ", state)
     print("----- play album -------")
-    player.play_new("spotify:album:1sKj6LEXiEfCmsiKwPy5uG")
+    player.load_new_playlist("spotify:album:1sKj6LEXiEfCmsiKwPy5uG")
+    player.play()
     time.sleep(5)
     state = player.get_current_state()
     print("current state: ", state)
