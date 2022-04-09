@@ -28,6 +28,7 @@ class AmpiController:
     player = None
     playlist = None
 
+    #saves pid & playslist on disk
     def save_state(self, playlist):
         with open('currentlyplaying.txt', 'w', encoding='utf-8') as f:
             f.write(str(os.getpid())+"," + playlist)
@@ -55,9 +56,10 @@ class AmpiController:
         print("Running startup");
         global current_state, player
         current_state = AmpiController.READY
-        if self.load_old_state() is None:
-            print("nothing to retrieve")
-
+        self.load_old_state()
+        if self.current_state == AmpiController.RESTARTED and self.playlist is not None:
+            player = music_box.get_client(self.playlist)
+            
         
     def turn_on_off(self):
         if( self.turn_on_off_state):
@@ -97,8 +99,9 @@ class AmpiController:
         print("Pause");
 
     def resume(self):
+
         player.resume()
-        print("Pause");
+        print("resume");
 
     def stop(self):
         player.stop()
