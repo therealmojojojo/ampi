@@ -2,6 +2,8 @@
 
 import RPi.GPIO as GPIO
 import time
+import alsaaudiopip in
+
 
 GPIO.setmode(GPIO.BCM)
 
