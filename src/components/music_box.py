@@ -1,5 +1,6 @@
 import os
 import time
+import inspect
 import json
 from os.path import join, dirname
 from dotenv import load_dotenv, find_dotenv
@@ -22,8 +23,7 @@ class MusicBox:
         self.current_playlist = None
         self.server = None
 
-    def load_new_playlist(self):
-        
+    def load_playlist(self, playlist=None):     
         pass
 
     def resume(self):
@@ -71,12 +71,15 @@ class MopidySpotifyClient(MusicBox):
         self.current_playlist = playlist
         self.server = jsonrpclib.Server(os.environ.get("mopidy_server") + "/mopidy/rpc")
         print(self.server)
+        self.load_playlist()
 
     def get_current_state(self):
         state = self.server.core.playback.get_state()
         return state
 
-    def load_new_playlist(self, playlist):  
+    def load_playlist(self, playlist=None): 
+        if playlist is not None:
+            self.current_playlist = playlist
         hits = self.server.core.library.browse(self.current_playlist)
         # browse(): Returns a list of mopidy.models.Ref objects for the directories and tracks at the given uri.
         print('Got hits from browse(): %r', hits)
@@ -92,6 +95,9 @@ class MopidySpotifyClient(MusicBox):
     def next(self):
         self.server.core.playback.next()
 
+    def play(self):
+        self.server.core.playback.play()
+    
     def back(self):
         self.server.core.playback.previous()
 
@@ -114,25 +120,30 @@ class MopidySpotifyClient(MusicBox):
 def get_client(playlist: str):
     print("Get Client for " + playlist)
     clients = {
-        "Spotify": MopidySpotifyClient,
-        "Roon": RoonClient
+        "Spotify": None,
+        "Roon": None
     }
     if playlist is None or playlist == '':
         return None 
     else:
         name = "Spotify" if playlist.find("spotify") >= 0 else "Roon"
+    if name == "Spotify":
+        if clients[name] is None:
+            clients[name] = MopidySpotifyClient(playlist)
+    else:
+        if clients[name] is None:
+            clients[name] = RoonClient()
+    
     print (clients[name])
-    return clients[name](playlist)
-
+    return clients[name]
 
 if __name__ == "__main__":
     print("----- getting spotify -------")
-    player = get_client("spotify")
-    player.connect_to_provider()
+    player = get_client("spotify:album:1sKj6LEXiEfCmsiKwPy5uG")
     state = player.get_current_state()
     print("current state: ", state)
     print("----- play album -------")
-    player.load_new_playlist("spotify:album:1sKj6LEXiEfCmsiKwPy5uG")
+    player.load_playlist("spotify:album:1sKj6LEXiEfCmsiKwPy5uG")
     player.play()
     time.sleep(5)
     state = player.get_current_state()
