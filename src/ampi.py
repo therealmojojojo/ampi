@@ -4,7 +4,6 @@ from typing import Any
 from components import nfc_cmd, music_box
 from utils.event import AmpiEvent
 import argparse
-import alsamixer
 
 #volume
 #screen

@@ -2,13 +2,12 @@
 
 import RPi.GPIO as GPIO
 import time
-import alsaaudiopip in
 
 
 GPIO.setmode(GPIO.BCM)
 
-pin_a = 18
-pin_b = 24
+pin_a = 6
+pin_b = 16
 
 def discharge():
     GPIO.setup(pin_a, GPIO.IN)
@@ -21,7 +20,7 @@ def charge_time():
     GPIO.setup(pin_a, GPIO.OUT)
     count = 0
     GPIO.output(pin_a, True)
-    while not GPIO.input(b_pin):
+    while not GPIO.input(pin_b):
         count = count + 1
     return count
 
