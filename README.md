@@ -3,11 +3,11 @@
 
 Main use cases: 
 1. Power 2*Monitor Audio BR2 speakers
-1. Run Roonlabs bridge
+1. Run Spotify, Roonlabs bridge
 1. NFC card triggers a playlist (album)
 1. HW volume button
    - 0-80%
-1. HW power on/off buttons (for amp only)
+1. HW power on/off switch - there has to be a way to reset pi without using command line (errors will happen)
    - stops/starts the amp but not the pi
 1. HW media control buttons
    - play, rewind, ffw, stop
@@ -24,9 +24,10 @@ Main use cases:
 Use case: I'm able to read the UID from a NFC card and pass it to AmpiController. 
 Unable to make it work using [P532 NFC Reader](https://github.com/gassajor000/pn532pi) python library. The behaviour I've noticed is the following: 
 - nfc-poll works reliably by itself
-- pn532 library works randomnly and after a while starts failing with OSError when reading or writing. . I've used the examples included in the package - i suspect there are some fd that are not closed or something that break the communication with the card. 
+- pn532 library works randomnly and after a while starts failing with OSError when reading or writing. . I've used the examples included in the package. 
 - After that OSError nfc-poll stops working
-- after restart, nfc-poll starts working reliably
+- after restart, nfc-poll starts working reliably. This make me suspect there are some fd that are not closed or something that breaks the communication with the card.
+
 In the end, I wrote a simple python subrocess function that calls nfc-poll directly and does the job. 
 
 ### HiFiBerry AMP2
@@ -64,8 +65,8 @@ Major issues:
 
 |PIN|ROLE|USED BY|PIN|ROLE|USED BY|
 |---|---|---|---|---|---|
-|1|3v3 Power||2|5v Power||
-|3|GPIO 2 (I2C1 SDA)| HifiBerry AMP2/[PN532 NFC v3](https://blog.stigok.com/2017/10/12/setting-up-a-pn532-nfc-module-on-a-raspberry-pi-using-i2c.html) |4|5v Power| [PN532 NFC v3](https://blog.stigok.com/2017/10/12/setting-up-a-pn532-nfc-module-on-a-raspberry-pi-using-i2c.html) |
+|1|3v3 Power|[PN532 NFC v3](https://blog.stigok.com/2017/10/12/setting-up-a-pn532-nfc-module-on-a-raspberry-pi-using-i2c.html)|2|5v Power||
+|3|GPIO 2 (I2C1 SDA)| HifiBerry AMP2/[PN532 NFC v3](https://blog.stigok.com/2017/10/12/setting-up-a-pn532-nfc-module-on-a-raspberry-pi-using-i2c.html) |4|5v Power|  |
 |5|GPIO 3 (I2C1 SCL)|HifiBerry AMP2/[PN532 NFC v3](https://blog.stigok.com/2017/10/12/setting-up-a-pn532-nfc-module-on-a-raspberry-pi-using-i2c.html)  |6|Ground| [PN532 NFC v3](https://blog.stigok.com/2017/10/12/setting-up-a-pn532-nfc-module-on-a-raspberry-pi-using-i2c.html) |
 |7|GPIO 4 (GPCLK0)|HifiBerry AMP2|8|GPIO 14 (UART TX)|
 |9|Ground||10|GPIO 15 (UART RX)|
@@ -78,11 +79,11 @@ Major issues:
 |23|GPIO 11  (SPI0 SCLK)| E-paper|24|GPIO 8 (SPI0 CE0)| E-Paper
 |25|Ground||26|GPIO 7 (SPI0 CE1)|
 |27|GPIO 0 (EEPROM SDA)||28|GPIO 1 (EEPROM SCL)|
-|29|GPIO 5|  |30|Ground|
-|31|GPIO 6||32|GPIO 12 (PWM0)||
-|33|GPIO 13 (PWM1||34|Ground||
-|35|GPIO 19 (PCM FS)|HifiBerry AMP2|36|GPIO 16||
-|37|GPIO 26||38|GPIO 20 (PCM DIN)|HifiBerry AMP2|
+|29|GPIO 5| Play/Pause Button |30|Ground|
+|31|GPIO 6| Stop Button |32|GPIO 12 (PWM0)||
+|33|GPIO 13 (PWM1||34|Ground| Buttons |
+|35|GPIO 19 (PCM FS)|HifiBerry AMP2|36|GPIO 16| Next Button |
+|37|GPIO 26| Back Button |38|GPIO 20 (PCM DIN)|HifiBerry AMP2|
 |39|Ground||40|GPIO 21 (PCM DOUT)|HifiBerry AMP2|
 
 ### PN532 NFC 

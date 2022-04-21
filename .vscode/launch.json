@@ -8,7 +8,7 @@
             "name": "Python: Ampi Daemon",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
+            "program": "~/Apps/ampi/src/ampi.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": [

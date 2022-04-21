@@ -12,7 +12,7 @@ print(dotenv_path)
 load_dotenv(dotenv_path)
 
 def get_property(name):
-    logger.debug("Property requested:", name)
+    logger.debug("Property requested: %s", name)
     property = os.environ.get(name)
-    logger.debug("Found:", property)
+    logger.debug("Found: %s", property)
     return property  

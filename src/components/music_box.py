@@ -68,7 +68,7 @@ class MopidySpotifyClient(MusicBox):
         self.current_playlist = playlist
         self.server = jsonrpclib.Server(os.environ.get("mopidy_server") + "/mopidy/rpc")
         logger.debug(self.server)
-        self.load_playlist()
+        self.load_playlist(playlist)
 
     def get_current_state(self):
         state = self.server.core.playback.get_state()
@@ -81,9 +81,13 @@ class MopidySpotifyClient(MusicBox):
         return MusicBox.UNKNOWN_PLAYING_STATE
 
     def load_playlist(self, playlist=None): 
-        logger.debug("Loading playlist: ", playlist)
+        
         if playlist is not None:
             self.current_playlist = playlist
+            logger.debug("Loading playlist: " + playlist)
+        else:
+            logger.error("Playlist is empty")
+            return
         hits = self.server.core.library.browse(self.current_playlist)
         # browse(): Returns a list of mopidy.models.Ref objects for the directories and tracks at the given uri.
         logger.debug('Got hits from browse(): %r', hits)
@@ -124,7 +128,7 @@ class MopidySpotifyClient(MusicBox):
 
 #factory
 def get_client(playlist: str):
-    logger.debug("Get Client for " + playlist)
+    logger.debug("Get Client for %s", playlist)
     clients = {
         "Spotify": None,
         "Roon": None

@@ -74,7 +74,7 @@ class AmpiController:
         if self.current_state == AmpiController.RESTARTED and self.playlist is not None:
             logger.info("Restarted. Previous Playlist: " + self.playlist)
             self.player = music_box.get_client(self.playlist)
-            self.player.load_playlist()
+            self.player.load_playlist(self.playlist)
         self.current_state = AmpiController.READY
         
     def turn_on_off(self):
@@ -113,9 +113,9 @@ class AmpiController:
             self.player.next()
         logger.debug("Next");
         track = self.player.get_current_track()
-        logger.debug("current track: ", track)
+        logger.debug("current track: %s", track)
         state = self.player.get_current_state()
-        logger.debug("current state: ", state)
+        logger.debug("current state: %s", state)
     
     def back(self):
         if self.player is not None:
@@ -155,9 +155,9 @@ class AmpiController:
         if  event == AmpiEvent.CARD_READ:
             logger.info("Card Read event received, UID=", payload)
             playlist = database.get_playlist(payload)
-            logger.info("Playlist {} found for UID={}", playlist, payload)
+            logger.info("Playlist %s found for UID=%s", playlist, payload)
             if playlist is None:
-                logger.debug("No playlist found for UID:", payload)
+                logger.debug("No playlist found for UID: %s", payload)
             self.play(playlist)
         elif   event == AmpiEvent.VOLUME_UP:
             pass
@@ -181,8 +181,8 @@ class AmpiController:
 if __name__ == '__main__':
     #init logging
     if (not utils.logger.setup_logging(console_log_output="stdout", console_log_level="debug", console_log_color=True,
-        logfile_file="ampi.log", logfile_log_level="debug", logfile_log_color=False,
-        log_line_template="%(color_on)s[%(created)d] [%(threadName)s] [%(levelname)-8s] %(message)s%(color_off)s")):
+        logfile_file="ampi.log", logfile_log_level="debug", logfile_log_color=False, logfile_log_datefmt='%Y/%m/%d %I:%M:%S %p',
+        log_line_template="%(color_on)s[%(asctime)s ] [%(threadName)s] [%(levelname)-8s] [%(filename)s] [%(funcName)s] [%(lineno)d] %(message)s%(color_off)s")):
         logger.debug("Failed to setup logging.")
         exit(1)
     logger = logging.getLogger(__name__)

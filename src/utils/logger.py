@@ -48,7 +48,7 @@ class LogFormatter(logging.Formatter):
         return super(LogFormatter, self).format(record, *args, **kwargs)
 
 # Setup logging
-def setup_logging(console_log_output, console_log_level, console_log_color, logfile_file, logfile_log_level, logfile_log_color, log_line_template):
+def setup_logging(console_log_output, console_log_level, console_log_color, logfile_file, logfile_log_level, logfile_log_color, logfile_log_datefmt, log_line_template):
 
     # Create logger
     # For simplicity, we use the root logger, i.e. call 'logging.getLogger()'
@@ -79,7 +79,7 @@ def setup_logging(console_log_output, console_log_level, console_log_color, logf
         return False
 
     # Create and set formatter, add console handler to logger
-    console_formatter = LogFormatter(fmt=log_line_template, color=console_log_color)
+    console_formatter = LogFormatter(fmt=log_line_template, color=console_log_color, datefmt=logfile_log_datefmt)
     console_handler.setFormatter(console_formatter)
     logger.addHandler(console_handler)
 
