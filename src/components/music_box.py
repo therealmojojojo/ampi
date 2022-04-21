@@ -1,24 +1,18 @@
 import os
 import time
-import inspect
-import json
-from os.path import join, dirname
-from dotenv import load_dotenv, find_dotenv
 
-dotenv_path = find_dotenv()
-print(dotenv_path)
-load_dotenv(dotenv_path)
-
-print(os.environ.get("PYTHONPATH"))
-print(os.environ.get("mopidy_server"))
-
-import requests
-from mopidy import core
+import logging
+logger = logging.getLogger(__name__)
 
 import jsonrpclib
 
 class MusicBox:
     
+    UNKNOWN_PLAYING_STATE = -1
+    PLAYING = 0
+    STOPPED = 1
+    PAUSED = 2
+
     def __init__(self):
         self.current_playlist = None
         self.server = None
@@ -60,7 +54,10 @@ class MusicBox:
         pass
 
     def connect_to_provider(self):
-        print("super")
+        logger.debug("super")
+        pass
+    def close():
+        logger.debug("closing")
         pass
 
 class RoonClient(MusicBox):
@@ -70,21 +67,28 @@ class MopidySpotifyClient(MusicBox):
     def __init__(self, playlist):
         self.current_playlist = playlist
         self.server = jsonrpclib.Server(os.environ.get("mopidy_server") + "/mopidy/rpc")
-        print(self.server)
+        logger.debug(self.server)
         self.load_playlist()
 
     def get_current_state(self):
         state = self.server.core.playback.get_state()
-        return state
+        if state == "playing": 
+            return MusicBox.PLAYING
+        elif state == "stopped":
+            return MusicBox.STOPPED
+        elif state == "paused":
+            return MusicBox.PAUSED
+        return MusicBox.UNKNOWN_PLAYING_STATE
 
     def load_playlist(self, playlist=None): 
+        logger.debug("Loading playlist: ", playlist)
         if playlist is not None:
             self.current_playlist = playlist
         hits = self.server.core.library.browse(self.current_playlist)
         # browse(): Returns a list of mopidy.models.Ref objects for the directories and tracks at the given uri.
-        print('Got hits from browse(): %r', hits)
+        logger.debug('Got hits from browse(): %r', hits)
         if len(hits) == 0:
-            print("Nothing found for playlist", self.current_playlist)
+            logger.debug("Nothing found for playlist", self.current_playlist)
             return 0
         self.server.core.tracklist.clear()
         self.server.core.tracklist.add(uris=[t['uri'] for t in hits])
@@ -94,6 +98,8 @@ class MopidySpotifyClient(MusicBox):
 
     def next(self):
         self.server.core.playback.next()
+        #sometimes mopidy does not play 
+        self.play()
 
     def play(self):
         self.server.core.playback.play()
@@ -118,7 +124,7 @@ class MopidySpotifyClient(MusicBox):
 
 #factory
 def get_client(playlist: str):
-    print("Get Client for " + playlist)
+    logger.debug("Get Client for " + playlist)
     clients = {
         "Spotify": None,
         "Roon": None
@@ -133,34 +139,35 @@ def get_client(playlist: str):
     else:
         if clients[name] is None:
             clients[name] = RoonClient()
+            return None
     
-    print (clients[name])
+    logger.debug (clients[name])
     return clients[name]
 
 if __name__ == "__main__":
-    print("----- getting spotify -------")
+    logger.debug("----- getting spotify -------")
     player = get_client("spotify:album:1sKj6LEXiEfCmsiKwPy5uG")
     state = player.get_current_state()
-    print("current state: ", state)
-    print("----- play album -------")
+    logger.debug("current state: ", state)
+    logger.debug("----- play album -------")
     player.load_playlist("spotify:album:1sKj6LEXiEfCmsiKwPy5uG")
     player.play()
     time.sleep(5)
     state = player.get_current_state()
-    print("current state: ", state)
+    logger.debug("current state: ", state)
     track = player.get_current_track()
-    print("current track: ", track)
-    print("----- next -------")
+    logger.debug("current track: ", track)
+    logger.debug("----- next -------")
     player.next()
     time.sleep(10)
     state = player.get_current_state()
-    print("current state: ", state)
+    logger.debug("current state: ", state)
     track = player.get_current_track()
-    print("current track: ", track)
-    print("----- previous -------")
+    logger.debug("current track: ", track)
+    logger.debug("----- previous -------")
     player.back()
     time.sleep(10)
     state = player.get_current_state()
-    print("current state: ", state)
+    logger.debug("current state: ", state)
     track = player.get_current_track()
-    print("current track: ", track)                                        
+    logger.debug("current track: ", track)                                        

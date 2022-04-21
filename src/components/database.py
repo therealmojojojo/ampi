@@ -1,3 +1,4 @@
+from json import load
 import pathlib
 import csv
 
@@ -7,8 +8,9 @@ database = {
     "53  b9  0d  3b  00  ea  80":"",
     "53  a9  08  1b  00  8a  80":""
 }
+initialized = False
 
-def load_database(config_path):
+def load_database(config_path=None):
     global database
     if config_path is None or config_path == '':
         path = str(pathlib.Path(__file__).parent.resolve())
@@ -20,16 +22,18 @@ def load_database(config_path):
         database = {rows[0]:rows[1] for rows in reader}
     return database
 
-
 def get_playlist(cardUID):
-	print("Searching for ", cardUID)
-	try:
-		return database[cardUID]
-	except:
-		print ('Card %s is not card list', cardUID)
-		return ''
-
-
+    global initialized
+    if not initialized: 
+        load_database()
+        initialized = True
+	
+    print("Searching for ", cardUID)
+    try:
+        return database[cardUID].strip()
+    except:
+        print ('Card %s is not card list', cardUID)
+        return None
 
 if __name__ == '__main__':
     path = pathlib.Path(__file__).parent.resolve()

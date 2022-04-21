@@ -1,18 +1,15 @@
-from enum import Enum
-import time
-from typing import Any
-from components import nfc_cmd, music_box
+from components import music_box, database
+from components.buttons import ButtonsController
+from components.nfc_cmd import NFCReader
 from utils.event import AmpiEvent
+from utils.logger import LogFormatter
+import utils.configuration
+import utils.logger
 import argparse
-
-#volume
-#screen
-#switch
-#status_led
-#nfc_reader
 import os
+import logging
 
-
+logger = None
 
 
 class AmpiController:
@@ -22,11 +19,35 @@ class AmpiController:
     PLAYING = 2 # playing a playlist
     PAUSED = 3 # was playing, now paused, waiting for interraction
     RESTARTED = 4
-    current_state = NON_INITIALIZED
+    
     component_registry = [];
     turn_on_off_state = 0;
-    player = None
     playlist = None
+
+    def __init__(self):
+        self.player = None
+        
+        self.load_old_state()
+        
+
+
+    def start_deamon(self):
+        logger.warning("Running ampi startup");
+        logger.warning("Init NFC");
+        #init nfc reader
+        nfc_reader = NFCReader(self.trigger_event)
+        nfc_reader.start()
+        
+        logger.warning("Init buttons");
+        #init buttons
+        buttons_controller = ButtonsController(self.trigger_event)
+        buttons_controller.start()
+        
+        #buttons_thread = ControlButtons(self.trigger_event)
+        #init screen
+        nfc_reader.join()
+        buttons_controller.join()
+        logger.warning("Ampi startup ended");
 
     #saves pid & playslist on disk
     def save_state(self, playlist):
@@ -39,105 +60,113 @@ class AmpiController:
             with open('currentlyplaying.txt', 'r', encoding='utf-8') as f:
                 line = f.readline()
         except FileNotFoundError:
-            print("file not found")
+            logger.warning("curentlyplaying.txt file not found")
         if line is None: 
             return None
         pid, playlist = line.split(",")
         if pid == str(os.getpid()): 
-            print("same pid")
+            logger.debug("same pid")
         else:
-            print("old pid:" + str(os.getpid()))
+            logger.debug("old pid:" + str(os.getpid()))
 
         self.playlist = playlist
         self.current_state = AmpiController.RESTARTED
-
-    def start(self):
-        print("Running startup");
-        global current_state, player
-        
-        self.load_old_state()
         if self.current_state == AmpiController.RESTARTED and self.playlist is not None:
-            print("Restarted. Previous Playlist: " + self.playlist)
-            player = music_box.get_client(self.playlist)
-            player.load_playlist()
-        current_state = AmpiController.READY
+            logger.info("Restarted. Previous Playlist: " + self.playlist)
+            self.player = music_box.get_client(self.playlist)
+            self.player.load_playlist()
+        self.current_state = AmpiController.READY
         
     def turn_on_off(self):
         if( self.turn_on_off_state):
             self.turn_on_off_state = 0;
-            print ("Turning off...");
+            logger.debug ("Turning off...");
         else:
             self.turn_on_off_state = 1;
-            print ("Turning on...");
+            logger.debug ("Turning on...");
             
     def play(self, nfc_string: str):
-        print(nfc_string)
+        logger.debug(nfc_string)
         if self.player is not None:
-            if self.player.playlist == nfc_string:
-                print("The playlist is already loaded")
-                player.play()
+            if self.player.current_playlist == nfc_string:
+                logger.debug("The playlist is already loaded")
+                self.player.play()
                 return
-        print("New playlist received")
+            #a playlist was played before
+            #self.player.close()
+        logger.debug("New playlist received")
+        
         self.player = music_box.get_client(nfc_string)
         if self.player is None:
-            print("Invalid/Not supported playlist")
+            logger.debug("Invalid/Not supported playlist")
             return
         #if self.current_state == AmpiController.RESTARTED:   
-        player.play()
-        print("Start playing " + nfc_string);
+        self.player.play()
+        logger.debug("Start playing " + nfc_string);
         self.save_state(nfc_string)
 
     def volume_change(self, volume=40, delta=-10):
-        print("Volume changing");
+        logger.debug("Volume changing");
 
     def next(self):
         if self.player is not None:
             self.player.next()
-        print("Next");
+        logger.debug("Next");
+        track = self.player.get_current_track()
+        logger.debug("current track: ", track)
+        state = self.player.get_current_state()
+        logger.debug("current state: ", state)
     
     def back(self):
         if self.player is not None:
             self.player.back()
-        print("Back");
+        logger.debug("Back");
         
     def fast_forward(self):
-        print("Fast Forward 10 sec");
+        logger.debug("Fast Forward 10 sec");
 
     def rewind(self):
-        print("Rewind 10 sec");
+        logger.debug("Rewind 10 sec");
 
     def pause(self):
         if self.player is not None:
             self.player.pause()
-        print("Pause");
+        logger.debug("Pause");
 
     def resume(self):
         if self.player is not None:
             self.player.resume()
-        print("resume");
+        logger.debug("resume");
 
     def stop(self):
         if self.player is not None:
             self.player.stop()
-        print("Pause");
+        logger.debug("Pause");
     
     def info(self):
-        print("info");
+        logger.debug("info");
         if self.player is not None:
             return self.player.get_current_track()
 
-    def trigger_event(self, event: AmpiEvent, payload: Any):
+    def trigger_event(self, event: AmpiEvent, payload=None):
         if event is None:
+            logger.debug("No event received. Ignore...")
             return
-        if     event == AmpiEvent.CARD_READ:
-            print("Card Read event received, UID={}", payload)
-
+        if  event == AmpiEvent.CARD_READ:
+            logger.info("Card Read event received, UID=", payload)
+            playlist = database.get_playlist(payload)
+            logger.info("Playlist {} found for UID={}", playlist, payload)
+            if playlist is None:
+                logger.debug("No playlist found for UID:", payload)
+            self.play(playlist)
         elif   event == AmpiEvent.VOLUME_UP:
             pass
+        
         elif   event == AmpiEvent.VOLUME_DOWN:
             pass
-        elif   event == AmpiEvent.PAUSE_PRESSED:
-            pass
+        elif   event == AmpiEvent.NEXT_PRESSED:
+            logger.debug("Next button pressed")
+            self.next()
         elif   event == AmpiEvent.PLAY_PRESSED:
             pass
         elif   event == AmpiEvent.FFWD_PRESSED:
@@ -147,18 +176,28 @@ class AmpiController:
         elif   event == AmpiEvent.TURN_ONOFF:
             pass
         else:
-            print("Ampi Controller has received an unsuported event")
+            logger.debug("Ampi Controller has received an unsuported event")
 
 if __name__ == '__main__':
+    #init logging
+    if (not utils.logger.setup_logging(console_log_output="stdout", console_log_level="debug", console_log_color=True,
+        logfile_file="ampi.log", logfile_log_level="debug", logfile_log_color=False,
+        log_line_template="%(color_on)s[%(created)d] [%(threadName)s] [%(levelname)-8s] %(message)s%(color_off)s")):
+        logger.debug("Failed to setup logging.")
+        exit(1)
+    logger = logging.getLogger(__name__)
+    log_level = utils.configuration.get_property(utils.configuration.CONFIG_LOG_LEVEL)
+    if log_level is not None:
+        logger.setLevel(log_level)
     ampi = AmpiController()
-    ampi.start()
     parser = argparse.ArgumentParser(prog="ampi")
+    parser.add_argument("-d", "--daemon", help="start as daemon", action='store_true')
     parser.add_argument("-p", "--play", help="start a playlist", nargs="*", required=False)
     parser.add_argument("-a", "--action", choices=["stop", "next", "info", "pause", "resume"], nargs="*", required=False)
     parser.add_argument("-v", "--volume", nargs="*", required=False)
     args = parser.parse_args()
     config = vars(args)
-    print(config)
+    logger.debug(config)
     if config["play"] is not None:
         ampi.play(str(config["play"][0]))
     if config["volume"] is not None:
@@ -168,11 +207,13 @@ if __name__ == '__main__':
     elif config["action"] == "next": 
         ampi.next()
     elif config["action"] == "info": 
-        print(ampi.info())
+        logger.debug(ampi.info())
     elif config["action"] == "pause": 
         ampi.pause()
     elif config["action"] == "resume": 
         ampi.resume()
+    elif config["daemon"]:
+        ampi.start_deamon()
     else:
         pass
 
