@@ -1,7 +1,8 @@
 import subprocess
 from utils.event import AmpiEvent
 import threading
-
+import logging
+logger = logging.getLogger(__name__)
 
 class NFCReader(threading.Thread):
     def __init__(self, event_handler):
@@ -21,7 +22,7 @@ class NFCReader(threading.Thread):
                     if self.event_handler is not None:
                         self.event_handler(AmpiEvent.CARD_READ, uid)
                     else:
-                        print(uid)
+                        logger.debug("UID = " + uid)
             # Do something else
 
             return_code = process.poll()
@@ -29,7 +30,7 @@ class NFCReader(threading.Thread):
             if return_code is not None:
                 if return_code == 0:
                     continue
-                print('nfc-poll RETURN CODE', return_code)
+                logger.debug('nfc-poll RETURN CODE {}', return_code)
                 # Process has finished, read rest of the output 
                 self.event_handler(AmpiEvent.UNEXPECTED_EVENT)
                 break

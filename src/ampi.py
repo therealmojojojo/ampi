@@ -26,10 +26,7 @@ class AmpiController:
 
     def __init__(self):
         self.player = None
-        
         self.load_old_state()
-        
-
 
     def start_deamon(self):
         logger.warning("Running ampi startup");
@@ -43,10 +40,7 @@ class AmpiController:
         buttons_controller = ButtonsController(self.trigger_event)
         buttons_controller.start()
         
-        #buttons_thread = ControlButtons(self.trigger_event)
         #init screen
-        nfc_reader.join()
-        buttons_controller.join()
         logger.warning("Ampi startup ended");
 
     #saves pid & playslist on disk
@@ -105,6 +99,17 @@ class AmpiController:
         logger.debug("Start playing " + nfc_string);
         self.save_state(nfc_string)
 
+    def play_current(self):
+        if self.player is not None:
+            state = self.player.get_current_state()
+            logger.debug("current state: %s", state)
+            if state == music_box.MusicBox.PLAYING:
+                logger.debug("Pausing")
+                self.player.pause()
+            else:
+                logger.debug("Start playing")
+                self.player.play()
+
     def volume_change(self, volume=40, delta=-10):
         logger.debug("Volume changing");
 
@@ -141,7 +146,7 @@ class AmpiController:
     def stop(self):
         if self.player is not None:
             self.player.stop()
-        logger.debug("Pause");
+        logger.debug("Stop");
     
     def info(self):
         logger.debug("info");
@@ -153,7 +158,7 @@ class AmpiController:
             logger.debug("No event received. Ignore...")
             return
         if  event == AmpiEvent.CARD_READ:
-            logger.info("Card Read event received, UID=", payload)
+            logger.info("Card Read event received, UID=%s", payload)
             playlist = database.get_playlist(payload)
             logger.info("Playlist %s found for UID=%s", playlist, payload)
             if playlist is None:
@@ -161,20 +166,21 @@ class AmpiController:
             self.play(playlist)
         elif   event == AmpiEvent.VOLUME_UP:
             pass
-        
         elif   event == AmpiEvent.VOLUME_DOWN:
             pass
         elif   event == AmpiEvent.NEXT_PRESSED:
             logger.debug("Next button pressed")
             self.next()
         elif   event == AmpiEvent.PLAY_PRESSED:
-            pass
+            self.play_current()
         elif   event == AmpiEvent.FFWD_PRESSED:
             pass
         elif   event == AmpiEvent.BACK_PRESSED:
-            pass
-        elif   event == AmpiEvent.TURN_ONOFF:
-            pass
+            self.back()
+        elif   event == AmpiEvent.RESET_PRESSED:
+            self.turn_on_off()
+        elif   event == AmpiEvent.STOP_PRESSED:
+            self.stop()
         else:
             logger.debug("Ampi Controller has received an unsuported event")
 

@@ -110,6 +110,8 @@ class MopidySpotifyClient(MusicBox):
     
     def back(self):
         self.server.core.playback.previous()
+        #sometimes mopidy does not play 
+        self.play()
 
     def pause(self):
         self.server.core.playback.pause()

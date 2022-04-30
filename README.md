@@ -72,7 +72,7 @@ Major issues:
 |9|Ground||10|GPIO 15 (UART RX)|
 |11|GPIO 17|HifiBerry AMP2|12|GPIO 18 (PCM CLK)|HifiBerry AMP2|
 |13|GPIO 27||14|Ground|
-|15|GPIO 22||16|GPIO 23| E-Paper !!!|
+|15|GPIO 22|Reboot Button|16|GPIO 23| E-Paper !!!|
 |17|3v3 Power| E-Paper |18|GPIO 24| E-Paper
 |19|GPIO 10 (SPI0 MOSI)| E-paper|20|Ground| E-Paper |
 |21|GPIO 9  (SPI0 MISO)||22|GPIO 25| E-Paper |

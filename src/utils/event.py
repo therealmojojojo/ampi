@@ -11,5 +11,5 @@ class AmpiEvent:
     FFWD_PRESSED = 6
     FBWD_PRESSED = 7
     BACK_PRESSED = 8
-    TURN_ONOFF = 9
+    RESET_PRESSED = 9
     UNEXPECTED_EVENT = -1
