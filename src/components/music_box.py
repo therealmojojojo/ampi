@@ -1,13 +1,13 @@
+import jsonrpclib
 import os
 import time
 
 import logging
 logger = logging.getLogger(__name__)
 
-import jsonrpclib
 
 class MusicBox:
-    
+
     UNKNOWN_PLAYING_STATE = -1
     PLAYING = 0
     STOPPED = 1
@@ -17,13 +17,13 @@ class MusicBox:
         self.current_playlist = None
         self.server = None
 
-    def load_playlist(self, playlist=None):     
+    def load_playlist(self, playlist=None):
         pass
 
     def resume(self):
         pass
 
-    def stop(self): 
+    def stop(self):
         pass
 
     def pause(self):
@@ -41,9 +41,15 @@ class MusicBox:
     def clear(self):
         pass
 
+    def mute(self):
+        pass
+
+    def volume_change(self, volume=40):
+        pass
+
     def get_current_state(self):
         pass
-    
+
     def get_current_track(self):
         pass
 
@@ -56,23 +62,28 @@ class MusicBox:
     def connect_to_provider(self):
         logger.debug("super")
         pass
+
     def close():
         logger.debug("closing")
         pass
 
+
 class RoonClient(MusicBox):
     pass
-#https://github.com/flandrefinish/mopidycli/blob/master/mopidycli/cli.py
+# https://github.com/flandrefinish/mopidycli/blob/master/mopidycli/cli.py
+
+
 class MopidySpotifyClient(MusicBox):
     def __init__(self, playlist):
         self.current_playlist = playlist
-        self.server = jsonrpclib.Server(os.environ.get("mopidy_server") + "/mopidy/rpc")
+        self.server = jsonrpclib.Server(
+            os.environ.get("mopidy_server") + "/mopidy/rpc")
         logger.debug(self.server)
         self.load_playlist(playlist)
 
     def get_current_state(self):
         state = self.server.core.playback.get_state()
-        if state == "playing": 
+        if state == "playing":
             return MusicBox.PLAYING
         elif state == "stopped":
             return MusicBox.STOPPED
@@ -80,8 +91,8 @@ class MopidySpotifyClient(MusicBox):
             return MusicBox.PAUSED
         return MusicBox.UNKNOWN_PLAYING_STATE
 
-    def load_playlist(self, playlist=None): 
-        
+    def load_playlist(self, playlist=None):
+
         if playlist is not None:
             self.current_playlist = playlist
             logger.debug("Loading playlist: " + playlist)
@@ -102,15 +113,17 @@ class MopidySpotifyClient(MusicBox):
 
     def next(self):
         self.server.core.playback.next()
-        #sometimes mopidy does not play 
+        # sometimes mopidy does not play
         self.play()
 
     def play(self):
         self.server.core.playback.play()
-    
+        time.sleep(0.5)
+        logger.debug("playing %s", self.get_current_track())
+
     def back(self):
         self.server.core.playback.previous()
-        #sometimes mopidy does not play 
+        # sometimes mopidy does not play
         self.play()
 
     def pause(self):
@@ -119,16 +132,22 @@ class MopidySpotifyClient(MusicBox):
     def resume(self):
         self.server.core.playback.resume()
 
-    def play(self):
-        self.server.core.playback.play()
-
     def stop(self):
         self.server.core.playback.stop()
-    
+
     def clear(self):
         self.server.core.tracklist.clear()
 
-#factory
+    def mute(self):
+        mute_status = self.server.core.mixer.get_mute()
+        self.server.core.mixer.set_mute(not mute_status)
+
+    def volume_change(self, volume=40):
+        self.server.core.mixer.set_volume(volume)
+
+# factory
+
+
 def get_client(playlist: str):
     logger.debug("Get Client for %s", playlist)
     clients = {
@@ -136,7 +155,7 @@ def get_client(playlist: str):
         "Roon": None
     }
     if playlist is None or playlist == '':
-        return None 
+        return None
     else:
         name = "Spotify" if playlist.find("spotify") >= 0 else "Roon"
     if name == "Spotify":
@@ -146,9 +165,10 @@ def get_client(playlist: str):
         if clients[name] is None:
             clients[name] = RoonClient()
             return None
-    
-    logger.debug (clients[name])
+
+    logger.debug(clients[name])
     return clients[name]
+
 
 if __name__ == "__main__":
     logger.debug("----- getting spotify -------")
@@ -176,4 +196,4 @@ if __name__ == "__main__":
     state = player.get_current_state()
     logger.debug("current state: ", state)
     track = player.get_current_track()
-    logger.debug("current track: ", track)                                        
+    logger.debug("current track: ", track)

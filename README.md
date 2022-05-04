@@ -81,7 +81,7 @@ Major issues:
 |27|GPIO 0 (EEPROM SDA)||28|GPIO 1 (EEPROM SCL)|
 |29|GPIO 5| Play/Pause Button |30|Ground|
 |31|GPIO 6| Stop Button |32|GPIO 12 (PWM0)||
-|33|GPIO 13 (PWM1||34|Ground| Buttons |
+|33|GPIO 13 (PWM1)||34|Ground| Buttons |
 |35|GPIO 19 (PCM FS)|HifiBerry AMP2|36|GPIO 16| Next Button |
 |37|GPIO 26| Back Button |38|GPIO 20 (PCM DIN)|HifiBerry AMP2|
 |39|Ground||40|GPIO 21 (PCM DOUT)|HifiBerry AMP2|
