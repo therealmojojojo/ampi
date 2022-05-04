@@ -1,7 +1,9 @@
-from components import music_box, database
-from components.buttons import ButtonsController
-from components.nfc_cmd import NFCReader
-from components.volume import VolumeControl
+from components import music_box
+from components.hardware.buttons import ButtonsController
+from components.database import database
+from components.hardware.nfc_cmd import NFCReader
+from components.hardware.volume import VolumeControl
+from components.model.musicbox import MusicBox, TrackMetadata
 from utils.event import AmpiEvent
 from utils.logger import LogFormatter
 import utils.configuration
@@ -108,7 +110,7 @@ class AmpiController:
         if self.player is not None:
             state = self.player.get_current_state()
             logger.debug("current state: %s", state)
-            if state == music_box.MusicBox.PLAYING:
+            if state == MusicBox.PLAYING:
                 logger.debug("Pausing")
                 self.player.pause()
             else:

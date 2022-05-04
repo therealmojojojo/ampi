@@ -71,7 +71,7 @@ Major issues:
 |7|GPIO 4 (GPCLK0)|HifiBerry AMP2|8|GPIO 14 (UART TX)|
 |9|Ground||10|GPIO 15 (UART RX)|
 |11|GPIO 17|HifiBerry AMP2|12|GPIO 18 (PCM CLK)|HifiBerry AMP2|
-|13|GPIO 27||14|Ground|
+|13|GPIO 27| Volume Control |14|Ground|
 |15|GPIO 22|Reboot Button|16|GPIO 23| E-Paper !!!|
 |17|3v3 Power| E-Paper |18|GPIO 24| E-Paper
 |19|GPIO 10 (SPI0 MOSI)| E-paper|20|Ground| E-Paper |
@@ -80,8 +80,8 @@ Major issues:
 |25|Ground||26|GPIO 7 (SPI0 CE1)|
 |27|GPIO 0 (EEPROM SDA)||28|GPIO 1 (EEPROM SCL)|
 |29|GPIO 5| Play/Pause Button |30|Ground|
-|31|GPIO 6| Stop Button |32|GPIO 12 (PWM0)||
-|33|GPIO 13 (PWM1)||34|Ground| Buttons |
+|31|GPIO 6| Stop Button |32|GPIO 12 (PWM0)| Volume Control |
+|33|GPIO 13 (PWM1)| Mute Button (on the rottary encoder) |34|Ground| Buttons |
 |35|GPIO 19 (PCM FS)|HifiBerry AMP2|36|GPIO 16| Next Button |
 |37|GPIO 26| Back Button |38|GPIO 20 (PCM DIN)|HifiBerry AMP2|
 |39|Ground||40|GPIO 21 (PCM DOUT)|HifiBerry AMP2|
