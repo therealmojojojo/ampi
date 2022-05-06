@@ -4,6 +4,7 @@ import jsonrpclib
 import os
 import time
 import logging
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +37,8 @@ class MopidySpotifyClient(MusicBox):
             return
         hits = self.server.core.library.browse(self.current_playlist)
         # browse(): Returns a list of mopidy.models.Ref objects for the directories and tracks at the given uri.
-        logger.debug('Got hits from browse(): %r', hits)
+        logger.debug('Got hits from browse(): %r',
+                     json.dumps(hits, sort_keys=True, indent=4))
         if len(hits) == 0:
             logger.debug("Nothing found for playlist", self.current_playlist)
             return 0
@@ -46,7 +48,25 @@ class MopidySpotifyClient(MusicBox):
     def get_current_track(self):
         track = TrackMetadata()
         current_track = self.server.core.playback.get_current_track()
-        return current_track
+        if current_track is not None:
+            track.track_name = current_track["name"]
+            track.album_year = current_track["date"]
+            track.track_number = current_track["track_no"]
+            album = current_track["album"]
+            track.album_name = album["name"]
+            artists = current_track["artists"]
+            i = 1
+            for artist in artists:
+                if i >= 3:
+                    break
+                if track.artist_name is not None:
+                    track.artist_name = track.artist_name + \
+                        ", " + artist["name"]
+                else:
+                    track.artist_name = artist["name"]
+                i += 1
+
+        return track
 
     def next(self):
         self.server.core.playback.next()

@@ -65,15 +65,26 @@ class MusicBox:
 
 
 class TrackMetadata:
-    track_number = 1
+    track_number = -1
     track_name = None
     composer_name = None
     artist_name = None
     album_name = None
     album_year = None
-    disk_number = 1
-    total_disks = 1
-    bitrate = 100
+    disk_number = -1
+    total_disks = -1
+    bitrate = -1
+
+    def __repr__(self):
+        return f'TrackMetadata(track_number="{self.track_number}"\
+                                track_name="{self.track_name}"\
+                                composer_name="{self.composer_name}"\
+                                artist_name="{self.artist_name}"\
+                                album_name="{self.album_name}"\
+                                album_year="{self.album_year}"\
+                                disk_number="{self.disk_number}"\
+                                total_disks="{self.total_disks}"\
+                                bitrate="{self.bitrate}"'
 
     def __init__(self):
         pass

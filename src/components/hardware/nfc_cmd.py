@@ -1,5 +1,5 @@
 import subprocess
-from utils.event import AmpiEvent
+from components.model.event import AmpiEvent
 import threading
 import logging
 logger = logging.getLogger(__name__)

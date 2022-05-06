@@ -4,7 +4,7 @@ from components.database import database
 from components.hardware.nfc_cmd import NFCReader
 from components.hardware.volume import VolumeControl
 from components.model.musicbox import MusicBox, TrackMetadata
-from utils.event import AmpiEvent
+from components.model.event import AmpiEvent
 from utils.logger import LogFormatter
 import utils.configuration
 import utils.logger
@@ -31,7 +31,7 @@ class AmpiController:
         self.player = None
         self.load_old_state()
 
-    def start_deamon(self):
+    def start_daemon(self):
         logger.warning("Running ampi startup")
         logger.warning("Init NFC")
         # init nfc reader
@@ -52,6 +52,7 @@ class AmpiController:
 
     # saves pid & playslist on disk
     def save_state(self, playlist):
+        currently_playing_file = utils.configuration
         with open('currentlyplaying.txt', 'w', encoding='utf-8') as f:
             f.write(str(os.getpid())+"," + playlist)
 
@@ -246,6 +247,6 @@ if __name__ == '__main__':
     elif config["action"] == "resume":
         ampi.resume()
     elif config["daemon"]:
-        ampi.start_deamon()
+        ampi.start_daemon()
     else:
         pass

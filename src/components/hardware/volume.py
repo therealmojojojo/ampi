@@ -2,7 +2,7 @@ import threading
 import time
 from math import floor
 from gpiozero import RotaryEncoder
-from utils.event import AmpiEvent
+from components.model.event import AmpiEvent
 import alsaaudio
 import logging
 logger = logging.getLogger(__name__)
@@ -12,7 +12,7 @@ class VolumeControl(threading.Thread):
     # GPIO Ports
     GPIO_A = 12  # CLK
     GPIO_B = 27
-    INIT_VOLUME = 40
+    INIT_VOLUME = 60
 
     def rotated_event(self):
         volume = floor((-self.rotor.value + 1)*50)
@@ -22,8 +22,8 @@ class VolumeControl(threading.Thread):
             logger.debug("Current AlsaMixer volume: %d, %d", lc, rc)
             if volume < 0:
                 self.mixer.setvolume(0)
-            elif volume > 80:
-                self.mixer.setvolume(80)
+            elif volume > 87:
+                self.mixer.setvolume(87)
             else:
                 self.mixer.setvolume(volume)
         except:

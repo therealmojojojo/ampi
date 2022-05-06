@@ -7,6 +7,16 @@ logger = logging.getLogger(__name__)
 CONFIG_MOPIDY_SERVER = "mopidy_server"
 CONFIG_LOG_LEVEL = "log_level"
 
+
+CONFIG_TEMP_FILES_FOLDER = "temp_files_folder"
+CONFIG_ROON_ZONE="roon_zone"
+CONFIG_ROON_CORE_HOST="roon_core_host"
+CONFIG_ROON_CORE_PORT="roon_core_port"
+VALUE_ROON_CORE_ID_FILE="roon_core_id_file"
+VALUE_ROON_TOKEN_FILE="roon_token_file"
+
+
+
 dotenv_path = find_dotenv()
 print(dotenv_path)
 load_dotenv(dotenv_path)

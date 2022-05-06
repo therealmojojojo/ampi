@@ -1,5 +1,9 @@
 {
     "python.analysis.extraPaths": [
-        "./lib"
-    ]
+        "./lib",
+        "./src",
+        "./img",
+        "./fonts"
+    ],
+    "python.envFile": "/home/pi/Apps/ampi/.env",
 }

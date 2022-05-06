@@ -1,5 +1,5 @@
 from gpiozero import Button
-from utils.event import AmpiEvent
+from components.model.event import AmpiEvent
 import threading
 import time
 import logging
