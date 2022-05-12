@@ -8,30 +8,43 @@ from components.model.musicbox import TrackMetadata
 from waveshare import epd2in9
 from utils import logger
 import math
+import time
 logger = logging.getLogger(__name__)
 
-# picdir = os.path.join(os.path.dirname(
-#    os.path.dirname(os.path.realpath(__file__))), 'img')
-# libdir = os.path.join(os.path.dirname(
-#    os.path.dirname(os.path.realpath(__file__))), 'lib')
-
 picdir = "/home/pi/Apps/ampi/img/"
-fontType = '/usr/share/fonts/truetype/roboto/Roboto-Regular.ttf'
+#fontType = '/usr/share/fonts/truetype/roboto/Roboto-Regular.ttf'
+#fontType = "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"
+fontType = "/usr/share/fonts/truetype/m1/mplus-1m-regular.ttf"
+
+'''
+Font chars number per line on 2.9 inch waveshare ePaper 
+DejaVuMono
+Font Size |   No Chars
+      38  |     12
+      28  |     17
+      24  |     20
+
+Mplus - M1
+      38  |     14
+      28  |     20
+      24  |     23
+
+'''
 
 
 class EpdDisplay:
     format = {
         "track_name": {
-            "total_chars": 13, "font_size": 38,
-            "total_chars2": 17, "font_size2": 28,
+            "total_chars": 14, "font_size": 38,
+            "total_chars2": 20, "font_size2": 28,
         },
         "album_name": {
-            "total_chars": 17, "font_size": 28,
-            "total_chars2": 21, "font_size2": 24,
+            "total_chars": 20, "font_size": 28,
+            "total_chars2": 23, "font_size2": 24,
         },
         "artist_name": {
-            "total_chars": 17, "font_size": 28,
-            "total_chars2": 21, "font_size2": 24,
+            "total_chars": 20, "font_size": 28,
+            "total_chars2": 23, "font_size2": 24,
         }
     }
 
@@ -125,14 +138,7 @@ class EpdDisplay:
         line_height = 0
         for i in range(0, self.total_lines):
             text, font_size = self.LineBuffer[i]
-            print(text, len(text), font_size)
             if len(text) > 0 or self.BufferIndex[i] > 0:
-                line_number = i+1
-                image_width, image_height = self.frame.size
-                print(image_width, image_height)
-                # self.draw.rectangle((0, 0, image_width, image_height),
-                #                    fill=self.line_fill)
-
                 self.draw.text((10, line_height), text, font=self.get_font(font_size),
                                fill=self.char_fill)
                 line_height += font_size + self.padding
@@ -198,6 +204,7 @@ class EpdDisplay:
         return meta_value, meta_font_size
 
     def refresh(self, track_metadata):
+        self.clear()
         track_name, track_font_size = self._parse_metadata_name("track_name",
                                                                 track_metadata.track_name)
         album_name, album_font_size = self._parse_metadata_name("album_name",
@@ -207,15 +214,27 @@ class EpdDisplay:
         self._out(1, track_name, track_font_size)
         self._out(2, album_name, album_font_size)
         self._out(3, artist_name, artist_font_size)
+        self.update()
 
     def get_font(self, font_size):
         return ImageFont.truetype(fontType, font_size)
 
+    def splash(self):
+        text = "Ampi"
+        font_size = line_height = 70
+        font = self.get_font(font_size)
+        self.draw.text((10, math.floor((self.epd.width - line_height)/2)), self.center_text("Ampi", 8), font=font,
+                       fill=self.char_fill)
+        self.epd.display(self.epd.getbuffer(self.frame))
+        time.sleep(0.5)
+        self.clear()
+        self.draw.text((10, math.floor((self.epd.width - line_height)/2)), self.center_text("Hello!", 8), font=font,
+                       fill=self.char_fill)
+        self.epd.display(self.epd.getbuffer(self.frame))
+
 
 if __name__ == "__main__":
     logger.info("start")
-    import time
-    import datetime
     epd = EpdDisplay()
     epd.setWrap(epd.WRAP)
     epd.reverse(False)
@@ -224,38 +243,35 @@ if __name__ == "__main__":
     try:
         while True:
 
-            track_metadata = TrackMetadata()
-            track_metadata.album_name = "Tchaikovsky: Piano Concerto No.1"
-            track_metadata.track_name = "Piano Concerto No. 1 in B-Flat Minor, Op. 23, TH. 55: 1. Allegro non troppo e molto maestoso - Allegro con spirito - Live at Philharmonie, Berlin"
-            track_metadata.artist_name = "Herbert von Karajan, Pyotr Ilyich Tchaikovsky"
+            # track_metadata = TrackMetadata()
+            # track_metadata.album_name = "Tchaikovsky: Piano Concerto No.1"
+            # track_metadata.track_name = "Piano Concerto No. 1 in B-Flat Minor, Op. 23, TH. 55: 1. Allegro non troppo e molto maestoso - Allegro con spirito - Live at Philharmonie, Berlin"
+            # track_metadata.artist_name = "Herbert von Karajan, Pyotr Ilyich Tchaikovsky"
 
-            epd.refresh(track_metadata)
-            epd.update()
+            # epd.refresh(track_metadata)
 
-            time.sleep(5)
-            epd.clear()
-            track_metadata.album_name = "A Moon Shaped Pool"
-            track_metadata.track_name = "Burn The Witch"
-            track_metadata.artist_name = "Radiohead"
-            epd.refresh(track_metadata)
-            epd.update()
+            # time.sleep(5)
+            # epd.clear()
+            # track_metadata.album_name = "A Moon Shaped Pool"
+            # track_metadata.track_name = "Burn The Witch"
+            # track_metadata.artist_name = "Radiohead"
+            # epd.refresh(track_metadata)
 
-            time.sleep(5)
-            epd.clear()
-            track_metadata.album_name = "Bach: Fugues"
-            track_metadata.track_name = "The Well-Tempered Clavier (24), collection of preludes & fugues, Book I, BWV 846-869 (BC L80-103): Fuga I a 4 voci, BWV 846"
-            track_metadata.artist_name = "Emerson String Quartet / Johann Sebastian Bach / Emanuel Aloys Förster"
-            epd.refresh(track_metadata)
-            epd.update()
+            # time.sleep(5)
+            # epd.clear()
+            # track_metadata.album_name = "Bach: Fugues"
+            # track_metadata.track_name = "The Well-Tempered Clavier (24), collection of preludes & fugues, Book I, BWV 846-869 (BC L80-103): Fuga I a 4 voci, BWV 846"
+            # track_metadata.artist_name = "Emerson String Quartet / Johann Sebastian Bach / Emanuel Aloys Förster"
+            # epd.refresh(track_metadata)
 
-            time.sleep(5)
-            epd.clear()
+            # time.sleep(5)
+            # epd.clear()
 
-            epd._out(1, "01234567890123456789", 38)
-            epd._out(2, "01234567890123456789", 28)
-            epd._out(3, "01234567890123456789012345678", 24)
-            epd.update()
-
+            #epd._out(1, "01234567890123456789", 80)
+            #epd._out(2, "01234567890123456789", 28)
+            #epd._out(3, "01234567890123456789012345678", 24)
+            epd.splash()
+            # epd.update()
             time.sleep(5)
 
             # epd.clear()

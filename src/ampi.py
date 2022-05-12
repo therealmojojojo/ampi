@@ -2,6 +2,7 @@ from components import music_box
 from components.hardware.buttons import ButtonsController
 from components.database import database
 from components.hardware.nfc_cmd import NFCReader
+from components.hardware.screen import EpdDisplay
 from components.hardware.volume import VolumeControl
 from components.model.musicbox import MusicBox, TrackMetadata
 from components.model.event import AmpiEvent
@@ -11,8 +12,49 @@ import utils.logger
 import argparse
 import os
 import logging
+import threading
+import time
 
 logger = None
+
+temp_files_folder = utils.configuration.get_property(
+    utils.configuration.CONFIG_TEMP_FILES_FOLDER)
+currently_playing_file = temp_files_folder + "/" + "currentlyplaying.txt"
+
+
+monitor_frequency = int(utils.configuration.get_property(
+    utils.configuration.CONFIG_MONITOR_FREQUENCY, 2))
+
+
+class StatusMonitor(threading.Thread):
+    def __init__(self, controller, event_handler):
+        threading.Thread.__init__(self)
+        self.controller = controller
+        self.running = True
+        self.event_handler = event_handler
+
+    def set_running(self, running):
+        self.running = running
+
+    def run(self):
+        logger.debug("Status monitor started. Frequency = %d",
+                     monitor_frequency)
+        while self.running:
+            try:
+                logger.debug("Checking changes")
+                track, state = self.controller.info()
+                if track.track_name != self.controller.current_track.track_name:
+                    logger.debug("Track changed")
+                    self.controller.current_track = track
+                    self.event_handler(AmpiEvent.TRACK_CHANGED, track)
+
+                if state != self.controller.current_status:
+                    logger.debug("Status changed")
+                    self.controller.current_status = state
+                    self.event_handler(AmpiEvent.PLAYING_STATUS_CHANGED, state)
+                time.sleep(monitor_frequency)
+            except:
+                logger.warning("Exception getting current track")
 
 
 class AmpiController:
@@ -26,43 +68,30 @@ class AmpiController:
     component_registry = []
     turn_on_off_state = 0
     playlist = None
+    current_track = TrackMetadata()
+    current_status = "Stopped"
 
     def __init__(self):
         self.player = None
+        self.screen = EpdDisplay()
+        self.screen.splash()
+
         self.load_old_state()
-
-    def start_daemon(self):
-        logger.warning("Running ampi startup")
-        logger.warning("Init NFC")
-        # init nfc reader
-        nfc_reader = NFCReader(self.trigger_event)
-        nfc_reader.start()
-
-        logger.warning("Init buttons")
-        # init buttons
-        buttons_controller = ButtonsController(self.trigger_event)
-        buttons_controller.start()
-
-        # init volume knob
-        volume_control = VolumeControl(self.trigger_event)
-        volume_control.start()
-
         # init screen
-        logger.warning("Ampi startup ended")
 
     # saves pid & playslist on disk
+
     def save_state(self, playlist):
-        currently_playing_file = utils.configuration
-        with open('currentlyplaying.txt', 'w', encoding='utf-8') as f:
+        with open(currently_playing_file, 'w', encoding='utf-8') as f:
             f.write(str(os.getpid())+"," + playlist)
 
     def load_old_state(self):
         line = None
         try:
-            with open('currentlyplaying.txt', 'r', encoding='utf-8') as f:
+            with open(currently_playing_file, 'r', encoding='utf-8') as f:
                 line = f.readline()
         except FileNotFoundError:
-            logger.warning("curentlyplaying.txt file not found")
+            logger.warning(currently_playing_file + " file not found")
         if line is None:
             return None
         pid, playlist = line.split(",")
@@ -72,12 +101,15 @@ class AmpiController:
             logger.debug("old pid:" + str(os.getpid()))
 
         self.playlist = playlist
-        self.current_state = AmpiController.RESTARTED
-        if self.current_state == AmpiController.RESTARTED and self.playlist is not None:
+        if self.playlist is not None:
             logger.info("Restarted. Previous Playlist: " + self.playlist)
             self.player = music_box.get_client(self.playlist)
             self.player.load_playlist(self.playlist)
-        self.current_state = AmpiController.READY
+
+    def refresh_screen(self):
+        track = self.player.get_current_track()
+        if track is not None:
+            self.screen.refresh(track)
 
     def turn_on_off(self):
         if(self.turn_on_off_state):
@@ -95,7 +127,8 @@ class AmpiController:
                 self.player.play()
                 return
             # a playlist was played before
-            # self.player.close()
+            else:
+                self.player.close()
         logger.debug("New playlist received")
 
         self.player = music_box.get_client(nfc_string)
@@ -135,14 +168,13 @@ class AmpiController:
         if self.player is not None:
             self.player.next()
         logger.debug("Next")
-        track = self.player.get_current_track()
-        logger.debug("current track: %s", track)
-        state = self.player.get_current_state()
-        logger.debug("current state: %s", state)
+
+        self.info()
 
     def back(self):
         if self.player is not None:
             self.player.back()
+        self.info()
         logger.debug("Back")
 
     def fast_forward(self):
@@ -154,16 +186,19 @@ class AmpiController:
     def pause(self):
         if self.player is not None:
             self.player.pause()
+        self.info()
         logger.debug("Pause")
 
     def resume(self):
         if self.player is not None:
             self.player.resume()
+        self.info()
         logger.debug("resume")
 
     def stop(self):
         if self.player is not None:
             self.player.stop()
+        self.info()
         logger.debug("Stop")
 
     def mute(self):
@@ -174,7 +209,10 @@ class AmpiController:
     def info(self):
         logger.debug("info")
         if self.player is not None:
-            return self.player.get_current_track()
+            track = self.player.get_current_track()
+            state = self.player.get_current_state()
+        logger.debug("Status: %s Track: %s", state, track)
+        return track, state
 
     def trigger_event(self, event: AmpiEvent, payload=None):
         if event is None:
@@ -204,8 +242,33 @@ class AmpiController:
             self.stop()
         elif event == AmpiEvent.MUTE_PRESSED:
             self.mute()
+        elif event == AmpiEvent.TRACK_CHANGED:
+            self.refresh_screen()
+        elif event == AmpiEvent.PLAYING_STATUS_CHANGED:
+            pass
         else:
             logger.debug("Ampi Controller has received an unsuported event")
+
+    def start_daemon(self):
+        logger.warning("Running ampi startup")
+        logger.warning("Init NFC")
+        # init nfc reader
+        nfc_reader = NFCReader(self.trigger_event)
+        nfc_reader.start()
+
+        logger.warning("Init buttons")
+        # init buttons
+        buttons_controller = ButtonsController(self.trigger_event)
+        buttons_controller.start()
+
+        # init volume knob
+        volume_control = VolumeControl(self.trigger_event)
+        volume_control.start()
+
+        # init status monitor - needed because there are no track change events from the clients...
+        status_monitor = StatusMonitor(self, self.trigger_event)
+        status_monitor.start()
+        logger.warning("Ampi startup ended")
 
 
 if __name__ == '__main__':

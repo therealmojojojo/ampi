@@ -10,11 +10,16 @@ logger = logging.getLogger(__name__)
 
 
 class MopidySpotifyClient(MusicBox):
+
+    def event_handler(self, event):
+        logger.debug("Mopidy event received: %s", event)
+
     def __init__(self, playlist):
         self.current_playlist = playlist
         self.server = jsonrpclib.Server(
             os.environ.get("mopidy_server") + "/mopidy/rpc")
         logger.debug(self.server)
+        self.server.core.on_event = self.event_handler
         self.load_playlist(playlist)
 
     def get_current_state(self):
@@ -69,6 +74,7 @@ class MopidySpotifyClient(MusicBox):
         return track
 
     def next(self):
+        self.pause()
         self.server.core.playback.next()
         # sometimes mopidy does not play
         self.play()
@@ -79,6 +85,7 @@ class MopidySpotifyClient(MusicBox):
         logger.debug("playing %s", self.get_current_track())
 
     def back(self):
+        self.pause()
         self.server.core.playback.previous()
         # sometimes mopidy does not play
         self.play()
@@ -102,3 +109,6 @@ class MopidySpotifyClient(MusicBox):
 
     def volume_change(self, volume=40):
         self.server.core.mixer.set_volume(volume)
+
+    def close(self):
+        self.server.core.playback.stop()

@@ -65,7 +65,7 @@ class RoonClient(MusicBox):
 
     def load_playlist(self, playlist=None):
         logger.debug("playing playlist %s", playlist)
-        # self.api.play_media(self.output_id, playlist, action="Play Now")
+        self.api.play_media(self.output_id, playlist, action="Pause")
 
     def resume(self):
         self.api.playback_control(self, self.zone_id, control="play")
