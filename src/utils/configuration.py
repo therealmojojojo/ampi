@@ -15,6 +15,9 @@ CONFIG_ROON_CORE_PORT = "roon_core_port"
 VALUE_ROON_CORE_ID_FILE = "roon_core_id_file"
 VALUE_ROON_TOKEN_FILE = "roon_token_file"
 CONFIG_MONITOR_FREQUENCY = "monitor_frequency"
+CONFIG_USE_SCREEN = "use_screen"
+CONFIG_USE_BUTTONS = "use_buttons"
+CONFIG_USE_NFC = "use_nfc"
 
 dotenv_path = find_dotenv()
 print(dotenv_path)

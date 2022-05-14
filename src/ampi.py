@@ -1,3 +1,4 @@
+from xmlrpc.client import boolean
 from components import music_box
 from components.hardware.buttons import ButtonsController
 from components.database import database
@@ -21,9 +22,15 @@ temp_files_folder = utils.configuration.get_property(
     utils.configuration.CONFIG_TEMP_FILES_FOLDER)
 currently_playing_file = temp_files_folder + "/" + "currentlyplaying.txt"
 
-
 monitor_frequency = int(utils.configuration.get_property(
     utils.configuration.CONFIG_MONITOR_FREQUENCY, 2))
+
+use_screen = boolean(utils.configuration.get_property(
+    utils.configuration.CONFIG_USE_SCREEN, False))
+use_buttons = boolean(utils.configuration.get_property(
+    utils.configuration.CONFIG_USE_SCREEN, False))
+use_nfc = boolean(utils.configuration.get_property(
+    utils.configuration.CONFIG_USE_NFC, False))
 
 
 class StatusMonitor(threading.Thread):
@@ -73,9 +80,11 @@ class AmpiController:
 
     def __init__(self):
         self.player = None
-        self.screen = EpdDisplay()
-        self.screen.splash()
-
+        if use_screen:
+            self.screen = EpdDisplay()
+            self.screen.splash()
+        else:
+            logger.warning("Screen disabled by configuration")
         self.load_old_state()
         # init screen
 
@@ -251,19 +260,24 @@ class AmpiController:
 
     def start_daemon(self):
         logger.warning("Running ampi startup")
-        logger.warning("Init NFC")
-        # init nfc reader
-        nfc_reader = NFCReader(self.trigger_event)
-        nfc_reader.start()
 
+        if use_nfc:
+            logger.warning("Init NFC")
+            # init nfc reader
+            nfc_reader = NFCReader(self.trigger_event)
+            nfc_reader.start()
+        else:
+            logger.warning("NFC disabled by configuration")
         logger.warning("Init buttons")
-        # init buttons
-        buttons_controller = ButtonsController(self.trigger_event)
-        buttons_controller.start()
-
-        # init volume knob
-        volume_control = VolumeControl(self.trigger_event)
-        volume_control.start()
+        if use_buttons:
+            # init buttons
+            buttons_controller = ButtonsController(self.trigger_event)
+            buttons_controller.start()
+            # init volume knob
+            volume_control = VolumeControl(self.trigger_event)
+            volume_control.start()
+        else:
+            logger.warning("Buttons disabled by configuration")
 
         # init status monitor - needed because there are no track change events from the clients...
         status_monitor = StatusMonitor(self, self.trigger_event)
