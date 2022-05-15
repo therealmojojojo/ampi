@@ -38,7 +38,9 @@ Followed the instructions [here](http://www.waailap.nl/instruction/215/setup-hif
 #### Roon client
 Installed [Roon Bridge](https://help.roonlabs.com/portal/en/kb/articles/linux-install#Overview)
 Installed [pyroon](https://github.com/pavoni/pyroon)
-Works perfectly. 
+It works. 
+Search is not good enough. 
+Does not return full metadata - only Artist, Album, Track name available. 
 
 #### Spotify
 Installed [mopidy](https://mopidy.com/)
@@ -47,6 +49,7 @@ Used [jsonrpclib](https://github.com/joshmarshall/jsonrpclib)
 Major issues: 
 - errors [ModuleNotFoundError: No module named 'gi'](https://stackoverflow.com/questions/71369726/no-module-named-gi). Module gi does not seem to exist on python 3.10 -> must use python 3.9
 - jsonrpclib sends text/xml and application-jsonrpc ContentType by default -> see [open bug](https://github.com/joshmarshall/jsonrpclib/issues/56). Mopidy [expects](https://docs.mopidy.com/en/latest/api/http/) application/json and rejects the request. Solution - [disable csfr_protection](https://github.com/mopidy/mopidy/pull/1714) in mopidy.conf
+- spotify connection fails randomly at startup. Solution change Boot after network connection in raspi-config to true https://discourse.mopidy.com/t/spotify-authentication-works-only-after-server-restart/3617/7
 
 ## Volume control
 

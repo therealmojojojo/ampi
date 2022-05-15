@@ -40,14 +40,16 @@ class StatusMonitor(threading.Thread):
         self.running = True
         self.event_handler = event_handler
 
-    def set_running(self, running):
-        self.running = running
+    def exit_gracefully(self):
+        self.running = False
 
     def run(self):
         logger.debug("Status monitor started. Frequency = %d",
                      monitor_frequency)
         while self.running:
             try:
+                if not self.running:
+                    break
                 logger.debug("Checking changes")
                 track, state = self.controller.info()
                 if track.track_name != self.controller.current_track.track_name:
@@ -59,9 +61,10 @@ class StatusMonitor(threading.Thread):
                     logger.debug("Status changed")
                     self.controller.current_status = state
                     self.event_handler(AmpiEvent.PLAYING_STATUS_CHANGED, state)
-                time.sleep(monitor_frequency)
             except:
                 logger.warning("Exception getting current track")
+            time.sleep(monitor_frequency)
+        logger.info("Status monitor shut down!")
 
 
 class AmpiController:
@@ -80,6 +83,13 @@ class AmpiController:
 
     def __init__(self):
         self.player = None
+        self.nfc_reader = None
+        self.screen = None
+        self.nfc_reader = None
+        self.volume_control = None
+        self.status_monitor = None
+        self.buttons_controller = None
+        self.running = True
         if use_screen:
             self.screen = EpdDisplay()
             self.screen.splash()
@@ -258,31 +268,59 @@ class AmpiController:
         else:
             logger.debug("Ampi Controller has received an unsuported event")
 
-    def start_daemon(self):
-        logger.warning("Running ampi startup")
+    def exit_gracefully(self, *args):
+        self.running = False
 
+    def shutdown_ampi(self):
+        logger.info("Shutting down")
+        if self.player != None:
+            self.player.close()
+        if self.screen != None:
+            self.screen.sleep()
+        if self.volume_control != None:
+            self.volume_control.exit_gracefully()
+            self.volume_control.join()
+        if self.buttons_controller != None:
+            self.buttons_controller.exit_gracefully()
+            self.buttons_controller.join()
+        if self.nfc_reader != None:
+            self.nfc_reader.exit_gracefully()
+            self.nfc_reader.join()
+        if self.status_monitor != None:
+            self.status_monitor.exit_gracefully()
+            self.status_monitor.join()
+        logger.info("Ampi shutdown finished")
+
+    def start_daemon(self):
+        logger.info("Running ampi startup")
         if use_nfc:
             logger.warning("Init NFC")
             # init nfc reader
-            nfc_reader = NFCReader(self.trigger_event)
-            nfc_reader.start()
+            self.nfc_reader = NFCReader(self.trigger_event)
+            self.nfc_reader.start()
         else:
             logger.warning("NFC disabled by configuration")
         logger.warning("Init buttons")
         if use_buttons:
             # init buttons
-            buttons_controller = ButtonsController(self.trigger_event)
-            buttons_controller.start()
+            self.buttons_controller = ButtonsController(self.trigger_event)
+            self.buttons_controller.start()
             # init volume knob
-            volume_control = VolumeControl(self.trigger_event)
-            volume_control.start()
+            self.volume_control = VolumeControl(self.trigger_event)
+            self.volume_control.start()
         else:
             logger.warning("Buttons disabled by configuration")
 
         # init status monitor - needed because there are no track change events from the clients...
-        status_monitor = StatusMonitor(self, self.trigger_event)
-        status_monitor.start()
-        logger.warning("Ampi startup ended")
+        self.status_monitor = StatusMonitor(self, self.trigger_event)
+        self.status_monitor.start()
+        logger.info("Ampi startup ended")
+        while self.running:
+            try:
+                time.sleep(5)
+            except KeyboardInterrupt:
+                self.shutdown_ampi()
+                break
 
 
 if __name__ == '__main__':

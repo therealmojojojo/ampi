@@ -57,8 +57,9 @@ class VolumeControl(threading.Thread):
     def run(self):
         while self.running:
             time.sleep(1)
+        logger.info("Volume Controller shut down!")
 
-    def stop(self):
+    def exit_gracefully(self):
         self.running = False
 
 
