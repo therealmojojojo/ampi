@@ -34,6 +34,9 @@ class MusicBox:
     def play(self):
         pass
 
+    def playpause(self):
+        pass
+
     def clear(self):
         pass
 

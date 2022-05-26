@@ -43,6 +43,7 @@ Search is not good enough.
 Does not return full metadata - only Artist, Album, Track name available. 
 
 #### Spotify
+Note: as of May 16, 2022, Spotify [dropped support for libspotify](https://github.com/MiczFlor/RPi-Jukebox-RFID/issues/1815) - alternative is librespot - but i didn't bother. Yet
 Installed [mopidy](https://mopidy.com/)
 Installed [mopidy-spotify](https://pypi.org/project/Mopidy-Spotify/)
 Used [jsonrpclib](https://github.com/joshmarshall/jsonrpclib) 

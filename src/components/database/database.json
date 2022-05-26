@@ -1,0 +1,29 @@
+{
+    "library": [
+        {
+            "card_uid": "53  b1  1d  1b  00  05  80",
+            "album_url": "spotify:album:7z9NFSRufj49W9kaD2rORj",
+            "album_title": ""
+        },
+        {
+            "card_uid": "f0  a5  e5  a5",
+            "album_url": "spotify:album:0tzfI6NFJqcJkWb23R3lRZ",
+            "album_title": ""
+        },
+        {
+            "card_uid": "53  b9  0d  3b  00  ea  80",
+            "album_url": "spotify:playlist:37i9dQZF1DX8OYzU0lx5hL",
+            "album_title": ""
+        },
+        {
+            "card_uid": "53  a9  08  1b  00  8a  80",
+            "album_url": "spotify:album:2WT1pbYjLJciAR26yMebkH",
+            "album_title": ""
+        },
+        {
+            "card_uid": "53  a8  09  3b  00  f5  80",
+            "album_url": "spotify:album:0tzfI6NFJqcJkWb23R3lRZ",
+            "album_title": ""
+        }
+    ]
+}

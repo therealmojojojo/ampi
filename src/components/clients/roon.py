@@ -29,6 +29,47 @@ target_zone = utils.configuration.get_property(
     utils.configuration.CONFIG_ROON_ZONE)
 
 
+class SearchRoon():
+    def __init__(self):
+        self.api = None
+        self.zone_id = None
+
+        try:
+            self.core_id = open(core_file).read()
+            self.token = open(token_file).read()
+            logger.debug("core_id, token: %s, %s ", self.core_id, self.token)
+            self.api = RoonApi(appinfo, self.token, core_host, core_port, True)
+        except OSError:
+            logger.warning("Not authorized yet. Authorizing")
+            self.api = self.authorize()
+        if self.api is None:
+            logger.error("Roon connection failed")
+            return
+        logger.debug("Connection established : %s", self.api)
+        outputs = self.api.outputs
+
+        for (output, zone) in outputs.items():
+            logger.debug("target_zone : %s", target_zone)
+            if zone["display_name"] == target_zone:
+                logger.debug("Output : %s", output)
+                self.output_id = output
+                break
+
+    def get_media(self, query, fuzzy=False):
+        logger.debug("getting results for query %s ", query)
+        result = self.api.list_media_fuzzy(
+            self.output_id, query, fuzzy)
+        if result is None:
+            logger.debug("Query result %s", "nothing found")
+            return None
+        logger.debug("Query result %s", len(result))
+        logger.debug("Query result %s", result)
+        return result
+
+    def play_id(self, key):
+        self.api.play_id(self.output_id, key)
+
+
 class RoonClient(MusicBox):
 
     def __init__(self, playlist):
@@ -61,29 +102,32 @@ class RoonClient(MusicBox):
             return
         logger.debug("playing on zone: %s, output_id=%s",
                      target_zone, self.zone_id)
-        # self.load_playlist(self.current_playlist)
+        self.load_playlist(self.current_playlist)
 
     def load_playlist(self, playlist=None):
         logger.debug("playing playlist %s", playlist)
-        self.api.play_media(self.output_id, playlist, action="Pause")
+        self.api.play_media(self.zone_id, playlist, action="Play Now")
 
     def resume(self):
-        self.api.playback_control(self, self.zone_id, control="play")
+        self.api.playback_control(self.zone_id, control="play")
 
     def stop(self):
-        self.api.playback_control(self, self.zone_id, control="stop")
+        self.api.playback_control(self.zone_id, control="stop")
 
     def pause(self):
-        self.api.playback_control(self, self.zone_id, control="pause")
+        self.api.playback_control(self.zone_id, control="pause")
+
+    def playpause(self):
+        self.api.playback_control(self.zone_id, control="playpause")
 
     def next(self):
-        self.api.playback_control(self, self.zone_id, control="next")
+        self.api.playback_control(self.zone_id, control="next")
 
     def back(self):
-        self.api.playback_control(self, self.zone_id, control="previous")
+        self.api.playback_control(self.zone_id, control="previous")
 
     def play(self):
-        self.api.playback_control(self, self.zone_id, control="play")
+        self.api.playback_control(self.zone_id, control="play")
 
     def clear(self):
         pass
@@ -134,7 +178,8 @@ class RoonClient(MusicBox):
     def close(self):
         logger.debug("closing")
         if self.api is not None:
-            self.api.close()
+            self.stop()
+            self.api.stop()
 
     def authorize(self):
         api = RoonApi(appinfo, None, core_host, core_port, False)

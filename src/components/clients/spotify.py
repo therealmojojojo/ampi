@@ -40,12 +40,17 @@ class MopidySpotifyClient(MusicBox):
         else:
             logger.error("Playlist is empty")
             return
-        hits = self.server.core.library.browse(self.current_playlist)
+        try:
+            hits = self.server.core.library.browse(self.current_playlist)
+        except ConnectionRefusedError:
+            logger.error("Error connecting to Mopidy ")
+
         # browse(): Returns a list of mopidy.models.Ref objects for the directories and tracks at the given uri.
         logger.debug('Got hits from browse(): %r',
                      json.dumps(hits, sort_keys=True, indent=4))
         if len(hits) == 0:
-            logger.debug("Nothing found for playlist", self.current_playlist)
+            logger.debug("Nothing found for playlist: %s",
+                         self.current_playlist)
             return 0
         self.server.core.tracklist.clear()
         self.server.core.tracklist.add(uris=[t['uri'] for t in hits])

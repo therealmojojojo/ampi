@@ -7,23 +7,23 @@ logger = logging.getLogger(__name__)
 # factory
 
 
-def get_client(playlist: str):
+def get_client(playlist):
     logger.debug("Get Client for %s", playlist)
     clients = {
-        "Spotify": None,
-        "Roon": None
+        "spotify": None,
+        "roon": None
     }
     if playlist is None or playlist == '':
         return None
-    else:
-        name = "Spotify" if playlist.find("spotify") >= 0 else "Roon"
-    if name == "Spotify":
+    if len(playlist) != 2:
+        return None
+    name = playlist[0]
+    if name == "spotify":
         if clients[name] is None:
-            clients[name] = MopidySpotifyClient(playlist)
+            clients[name] = MopidySpotifyClient(playlist[1])
     else:
         if clients[name] is None:
-            clients[name] = RoonClient()
-            return None
+            clients[name] = RoonClient(playlist[1])
 
     logger.debug(clients[name])
     return clients[name]

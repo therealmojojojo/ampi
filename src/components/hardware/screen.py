@@ -143,8 +143,8 @@ class EpdDisplay:
                                fill=self.char_fill)
                 line_height += font_size + self.padding
         # add media controls
-        media = Image.open(os.path.join(picdir, 'mediabuttons.bmp'))
-        self.frame.paste(media, (20, 110))
+        #media = Image.open(os.path.join(picdir, 'mediabuttons.bmp'))
+        #self.frame.paste(media, (20, 110))
         # Update screen
         self.epd.display(self.epd.getbuffer(self.frame))
 
@@ -161,6 +161,7 @@ class EpdDisplay:
 
     def sleep(self):
         self.epd.sleep()
+        logger.info("Shutting down Screen")
 
     # Reverse screen colour
     def reverse(self, truefalse):

@@ -15,6 +15,7 @@ import os
 import logging
 import threading
 import time
+import signal
 
 logger = None
 
@@ -81,23 +82,6 @@ class AmpiController:
     current_track = TrackMetadata()
     current_status = "Stopped"
 
-    def __init__(self):
-        self.player = None
-        self.nfc_reader = None
-        self.screen = None
-        self.nfc_reader = None
-        self.volume_control = None
-        self.status_monitor = None
-        self.buttons_controller = None
-        self.running = True
-        if use_screen:
-            self.screen = EpdDisplay()
-            self.screen.splash()
-        else:
-            logger.warning("Screen disabled by configuration")
-        self.load_old_state()
-        # init screen
-
     # saves pid & playslist on disk
 
     def save_state(self, playlist):
@@ -138,10 +122,10 @@ class AmpiController:
             self.turn_on_off_state = 1
             logger.debug("Turning on...")
 
-    def play(self, nfc_string: str):
-        logger.debug(nfc_string)
+    def play(self, album_url):
+        logger.debug(album_url)
         if self.player is not None:
-            if self.player.current_playlist == nfc_string:
+            if self.player.current_playlist == album_url:
                 logger.debug("The playlist is already loaded")
                 self.player.play()
                 return
@@ -150,20 +134,23 @@ class AmpiController:
                 self.player.close()
         logger.debug("New playlist received")
 
-        self.player = music_box.get_client(nfc_string)
+        self.player = music_box.get_client(album_url)
         if self.player is None:
             logger.debug("Invalid/Not supported playlist")
             return
         # if self.current_state == AmpiController.RESTARTED:
         self.player.play()
-        logger.debug("Start playing " + nfc_string)
-        self.save_state(nfc_string)
+        logger.debug("Start playing %s", album_url)
+        # self.save_state(nfc_string)
 
     def play_current(self):
         if self.player is not None:
             state = self.player.get_current_state()
             logger.debug("current state: %s", state)
-            if state == MusicBox.PLAYING:
+            if state == None:
+                logger.debug("Playpausing")
+                self.player.playpause()
+            elif state == MusicBox.PLAYING:
                 logger.debug("Pausing")
                 self.player.pause()
             else:
@@ -271,7 +258,7 @@ class AmpiController:
     def exit_gracefully(self, *args):
         self.running = False
 
-    def shutdown_ampi(self):
+    def shutdown_ampi(self, *args):
         logger.info("Shutting down")
         if self.player != None:
             self.player.close()
@@ -322,11 +309,30 @@ class AmpiController:
                 self.shutdown_ampi()
                 break
 
+    def __init__(self):
+        self.player = None
+        self.nfc_reader = None
+        self.screen = None
+        self.nfc_reader = None
+        self.volume_control = None
+        self.status_monitor = None
+        self.buttons_controller = None
+        self.running = True
+        if use_screen:
+            self.screen = EpdDisplay()
+            self.screen.splash()
+        else:
+            logger.warning("Screen disabled by configuration")
+
+        signal.signal(signal.SIGTERM, self.shutdown_ampi)
+        # self.load_old_state()
+        # init screen
+
 
 if __name__ == '__main__':
     # init logging
     if (not utils.logger.setup_logging(console_log_output="stdout", console_log_level="debug", console_log_color=True,
-        logfile_file="ampi.log", logfile_log_level="debug", logfile_log_color=False, logfile_log_datefmt='%Y/%m/%d %I:%M:%S %p',
+        logfile_file=temp_files_folder + "/ampi.log", logfile_log_level="debug", logfile_log_color=False, logfile_log_datefmt='%Y/%m/%d %I:%M:%S %p',
                                        log_line_template="%(color_on)s[%(asctime)s ] [%(threadName)s] [%(levelname)-8s] [%(filename)s] [%(funcName)s] [%(lineno)d] %(message)s%(color_off)s")):
         logger.debug("Failed to setup logging.")
         exit(1)

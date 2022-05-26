@@ -9,6 +9,7 @@ CONFIG_LOG_LEVEL = "log_level"
 
 
 CONFIG_TEMP_FILES_FOLDER = "temp_files_folder"
+CONFIG_DATABASE_FILE = "database_file"
 CONFIG_ROON_ZONE = "roon_zone"
 CONFIG_ROON_CORE_HOST = "roon_core_host"
 CONFIG_ROON_CORE_PORT = "roon_core_port"
